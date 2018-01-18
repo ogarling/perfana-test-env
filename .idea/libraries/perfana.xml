@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="perfana">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../perfana" />
+    </SOURCES>
+  </library>
+</component>
