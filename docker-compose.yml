@@ -55,6 +55,18 @@ services:
       - "4000:3000"
     networks:
       - my-net
+  perfana:
+    image: "perfana/perfana:latest"
+    depends_on:
+      - grafana
+      - influxdb
+    environment:
+      MONGO_URL: "mongodb://mongo:27017"
+      METEOR_SETTINGS: '{"isDemo": true,"autoCreateApplications": true,"snapshotExpires": "7776000","perfanaHost":"http://localhost:3000","influxDbHost": "influxdb"}'
+    ports:
+      - "3000:3000"
+    networks:
+      - my-net
 
   bootstrap:
     image: "alpine:latest"
@@ -67,6 +79,7 @@ services:
       - "./prometheus-docker-dashboard.json:/prometheus-docker-dashboard.json:ro"
       - "./gatling.json:/gatling.json:ro"
       - "./graphite.json:/graphite.json:ro"
+      - "./perfana_trends.json:/perfana_trends.json:ro"
     networks:
       - my-net
     command: /bootstrap.sh
@@ -113,16 +126,15 @@ services:
     expose:
       - 8080
 
-  # jenkins:
-  #   image: dmoll1974/targets-io-jenkins
-  #   ports:
-  #   - "8080:8080"
-  #   - "50000:50000"
-  #   networks:
-  #     - my-net
-  #   depends_on:
-  #   - mean
-  #   - influxdb
+  jenkins:
+    image: perfana/perfana-demo-jenkins
+    ports:
+    - "8080:8080"
+    networks:
+      - my-net
+    depends_on:
+    - mean
+    - influxdb
 
   mongo:
     image: mongo:3.0

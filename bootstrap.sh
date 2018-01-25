@@ -29,6 +29,14 @@ if [ $STATUSCODE -ne 200 ]; then
     exit 1
 fi
 
+STATUSCODE=$(curl -i -XPOST 'http://influxdb:8086/query?q=CREATE+DATABASE+%22perfana_trends%22&db=_internal' \
+                  --write-out "%{http_code}" --output /dev/stderr)
+
+if [ $STATUSCODE -ne 200 ]; then
+    echo "Unable to create perfana_trends db in influxdb"
+    exit 1
+fi
+
 STATUSCODE=$(curl -i -XPOST 'http://foobar:foobar@grafana:3000/api/datasources' \
                   --write-out "%{http_code}" --output /dev/stderr \
                   --header 'Content-Type: application/json' \
@@ -46,6 +54,16 @@ STATUSCODE=$(curl -i -XPOST 'http://foobar:foobar@grafana:3000/api/datasources' 
 
 if [ $STATUSCODE -ne 200 ]; then
     echo "Unable to initialise the influxdb telegraf data source"
+    exit 1
+fi
+
+STATUSCODE=$(curl -i -XPOST 'http://foobar:foobar@grafana:3000/api/datasources' \
+                  --write-out "%{http_code}" --output /dev/stderr \
+                  --header 'Content-Type: application/json' \
+                  --data-binary "{\"name\":\"influxdb perfana trends\",\"type\":\"influxdb\",\"access\":\"proxy\",\"url\":\"http://influxdb:8086\",\"password\":\"foobar\",\"user\":\"foobar\",\"database\":\"perfana_trends\",\"basicAuth\":false,\"isDefault\":true}")
+
+if [ $STATUSCODE -ne 200 ]; then
+    echo "Unable to initialise the influxdb perfana_trends data source"
     exit 1
 fi
 
@@ -107,6 +125,16 @@ STATUSCODE=$(curl -i -XPOST 'http://foobar:foobar@grafana:3000/api/dashboards/im
 
 if [ $STATUSCODE -ne 200 ]; then
     echo "Unable to create the graphite dashboard"
+    exit 1
+fi
+
+STATUSCODE=$(curl -i -XPOST 'http://foobar:foobar@grafana:3000/api/dashboards/import' \
+                  --write-out "%{http_code}" --output /dev/stderr \
+                  --header 'Content-Type: application/json' \
+                  --data-binary @/perfana_trends.json)
+
+if [ $STATUSCODE -ne 200 ]; then
+    echo "Unable to create the Perfana trends dashboard"
     exit 1
 fi
 
